@@ -29,7 +29,9 @@ practice_with_dice()
 def throw_two_dice():
     dice_1 = random.randint(1,6)
     dice_2 = random.randint(1,6)
-
+    result = dice_1 + dice_2
+    
+    return result
 
 def simulate_monopoly_games(total_games: int) -> int: 
     pass
