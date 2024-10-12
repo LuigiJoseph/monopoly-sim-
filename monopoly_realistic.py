@@ -2,121 +2,104 @@ import random
 import matplotlib.pyplot as plt
 from statistics import mean
 
-def practice_with_dice():
-    total_doubles = 0
-
-    for i in range(1000):
-        # Simulate two dice rolls
-        dice1 = random.randint(1, 6)
-        dice2 = random.randint(1, 6)
-        total = dice1 + dice2
-        
-        # Print the total value of the dice
-        print(f"Throw {i+1}: Dice 1 = {dice1}, Dice 2 = {dice2}, Total = {total}")
-        
-        # Check if a double was thrown
-        if dice1 == dice2:
-            print("** Double! **")
-            total_doubles += 1
-    
-    # Print the total number of doubles at the end
-    print(f"\nTotal number of doubles thrown: {total_doubles}")
-
-# Testing the function
-# practice_with_dice()
-
-
-
+# Function to simulate rolling two dice
 def throw_two_dice():
-    dice_1 = random.randint(1,6)
-    dice_2 = random.randint(1,6)
-    result = dice_1 + dice_2
-    
-    return result
+    dice_1 = random.randint(1, 6)
+    dice_2 = random.randint(1, 6)
+    return dice_1 + dice_2
 
-def simulate_monopoly(starting_money_p1, starting_money_p2): 
+# Function to simulate a Monopoly game with two players
+def simulate_monopoly(starting_money_p1, starting_money_p2):
     board_values = [0, 60, 0, 60, 0, 200, 100, 0, 100, 120, 0, 140, 150, 140, 160, 200, 180,
                     0, 180, 200, 0, 220, 0, 220, 240, 200, 260, 260, 150, 280, 0, 300, 300,
-                    0, 320, 200, 0, 350, 0, 400] #A value of 0 means, the field is empty (not for sale)
+                    0, 320, 200, 0, 350, 0, 400]  # Board setup
 
-    possesions = [0] * 40
-    possession_count_p1, possession_count_p2 = [0] * 40
+    possession_count_p1 = 0  # Player 1 property count
+    possession_count_p2 = 0  # Player 2 property count
 
-    current_position_p1, current_position_p2 = 0
+    current_position_p1, current_position_p2 = 0, 0
     current_money_p1, current_money_p2 = starting_money_p1, starting_money_p2
+    num_of_properties = 28  # Total properties available to buy
 
-    num_of_properties = 28 #remaining properties
-    
+    while sum(board_values) != 0:  # Game loop
 
-    while sum(board_values) != 0:
+        # Player 1's turn
+        previous_position_p1 = current_position_p1
+        current_position_p1 = (current_position_p1 + throw_two_dice()) % len(board_values)
 
-        # if board_values[current_position] == 0:
-        #     print(f"throw {num_of_throw} position: {current_position} (empty)") #cant buy (is empty)
+        # Check if Player 1 passes or lands on GO
+        if current_position_p1 < previous_position_p1:
+            current_money_p1 += 200  # Collect $200 for passing GO
 
-        if board_values[current_position] != 0:
-                if current_money > board_values[current_position]:
-                    current_money -= board_values[current_position]
-                    num_of_buying += 1
-                    num_of_properties -= 1
-                    possesions[current_position] = board_values[current_position] #add property to our list 
-                    board_values[current_position] = 0 #buy that property and have it empty (value 0)
-                
-                    # else:
-                    #     print("No sufficent funds to buy the property")
+        # Check if Player 1 can buy the property
+        if board_values[current_position_p1] != 0 and current_money_p1 >= board_values[current_position_p1]:
+            current_money_p1 -= board_values[current_position_p1]
+            possession_count_p1 += 1  # Player 1 buys the property
+            board_values[current_position_p1] = 0  # Mark the property as bought
 
+        # Player 2's turn
+        previous_position_p2 = current_position_p2
+        current_position_p2 = (current_position_p2 + throw_two_dice()) % len(board_values)
 
-                    # print(f"throw {num_of_throw} position: {current_position} (property)")
+        # Check if Player 2 passes or lands on GO
+        if current_position_p2 < previous_position_p2:
+            current_money_p2 += 200  # Collect $200 for passing GO
 
-                    # if num_of_buying == 1:
-                    #     print(f"\n Player 1 has {num_of_buying} property in their possesion, There are still {num_of_properties}")
-                    # elif num_of_buying == 28:
-                    #     print("Player 1 has all properties")
-                    # else:
-                    #     print(f"\n Player 1 has {num_of_buying} properties in their possesion, There are still {num_of_properties}")
-                    
-        
+        # Check if Player 2 can buy the property
+        if board_values[current_position_p2] != 0 and current_money_p2 >= board_values[current_position_p2]:
+            current_money_p2 -= board_values[current_position_p2]
+            possession_count_p2 += 1  # Player 2 buys the property
+            board_values[current_position_p2] = 0  # Mark the property as bought
 
-        num_of_throw += 1
-        previous_position = current_position
-        current_position = throw_two_dice() + current_position
+    # Return the difference in properties between Player 1 and Player 2
+    return possession_count_p1 - possession_count_p2
 
-        if current_position < previous_position:
-            current_money += 200
-        #Wrap around the board using modulus to prevent index out of range
-        current_position %= len(board_values)
-
-        if current_position < previous_position:
-            current_money += 200
-
-
-
-    
-    # print(f"Done! After throw {num_of_throw} the player owned all properties.")
-    return num_of_throw
-
-
-
-def simulate_monopoly_games(total_games: int, starting_money: int):
-    throws_list = []  # List to track the number of throws in each game
+# Function to simulate multiple Monopoly games
+def simulate_monopoly_games(total_games, starting_money_p1, starting_money_p2):
+    possession_differences = []  # Track the difference in possessions between players
 
     for game in range(total_games):
-        number_of_throws = simulate_monopoly(starting_money)
-        throws_list.append(number_of_throws)
-    mean_of_throws = mean(throws_list)
-    print(f"Monopoly simulator: 1 player, 1500 euros starting money, 2500 games. It took an average of {mean_of_throws} throws for the player to collect all streets")
-    # print(throws_list)
+        delta = simulate_monopoly(starting_money_p1, starting_money_p2)
+        possession_differences.append(delta)
 
-  
-    #Draw the graph (histogram)
-    plt.hist(throws_list, bins=50, edgecolor='black')
-    plt.title(f'Histogram of Throws in {total_games} Monopoly Games')
-    plt.xlabel('Number of Throws')
-    plt.ylabel('Frequency')
+    # Calculate the average difference
+    average_difference = mean(possession_differences)
+
+    print(f"Monopoly simulator: two players, {starting_money_p1} euros starting money, {total_games} games.")
+    print(f"On average player 1 has {average_difference:.2f} more streets in their possession when all streets are bought.")
+
+    # Plot histogram of possession differences
+    plt.hist(possession_differences, bins=50, edgecolor='black')
+    plt.title(f"Histogram of Property Differences in {total_games} Monopoly Games")
+    plt.xlabel("Possession Difference (Player 1 - Player 2)")
+    plt.ylabel("Frequency")
     plt.show()
 
-    return mean_of_throws
+    return average_difference
 
-# The following block ensures that the code only runs if this file is executed directly
+
+def equilibrium(total_games):
+    starting_money_p1 = 1500  # Player 1 starting money
+    extra_money_options = [0, 50, 100, 150, 200]  # Extra money for Player 2
+    differences = []
+
+    for extra_money in extra_money_options:
+        starting_money_p2 = 1500 + extra_money  # Player 2 starts with more money
+        average_difference = simulate_monopoly_games(total_games, starting_money_p1, starting_money_p2)
+        differences.append(average_difference)
+
+        # Print the result in the required format
+        print(f"Starting money [1500,{starting_money_p2}]: player 1 on average {average_difference:.2f} more streets (player 2 got {extra_money} extra starting money)")
+
+    # Plotting the results
+    plt.plot(extra_money_options, differences, marker='o')
+    plt.title("Average Difference in Properties (Player 1 - Player 2)")
+    plt.xlabel("Extra Starting Money for Player 2")
+    plt.ylabel("Average Difference in Properties")
+    plt.grid(True)
+    plt.show()
+
+
+# Run the equilibrium test
 if __name__ == "__main__":
-    # Simulate 10,000 games
-    simulate_monopoly_games(10000, 1500)
+    equilibrium(10000)
